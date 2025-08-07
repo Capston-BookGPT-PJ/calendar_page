@@ -8,7 +8,8 @@
         <item name="cornerSizeBottomRight">16dp</item>
     </style>
 
-<!-- ✅ 앱 전체 테마 정의 해림 언니 부분-->
+
+<!-- 앱 전체 테마 정의 해림 언니 부분-->
 <style name="Theme.Capstone" parent="Theme.AppCompat.Light.NoActionBar">
     <item name="colorPrimary">#6200EE</item>
     <item name="colorPrimaryDark">#3700B3</item>

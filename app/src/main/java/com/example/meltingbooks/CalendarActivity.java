@@ -13,6 +13,7 @@ public class CalendarActivity extends BaseActivity {
         // 하단 메뉴
         setupBottomNavigation();
 
+        //fragment_container
         findViewById(R.id.add_reading_record).setOnClickListener(v -> {
             getSupportFragmentManager()
                     .beginTransaction()

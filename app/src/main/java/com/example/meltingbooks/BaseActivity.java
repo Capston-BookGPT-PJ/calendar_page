@@ -50,7 +50,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             }
         });
 
-        bottomNavigationView.setOnItemSelectedListener(item -> {
+        /*ottomNavigationView.setOnItemSelectedListener(item -> {
             int position = getSelectedPosition(item.getItemId());
             if (position >= 0 && iconPositions != null) {
                 gradientCircle.animate().x(iconPositions[position]).setDuration(300).start();
@@ -69,9 +69,46 @@ public abstract class BaseActivity extends AppCompatActivity {
                     overridePendingTransition(0, 0);
                 }
                 return true;
+            } else if (itemId == R.id.Profile) {
+                if (!(this instanceof ProfileActivity)) {
+                    startActivity(new Intent(this, ProfileActivity.class));
+                    overridePendingTransition(0, 0);
+                }
+                return true;
             }
 
             // 다른 메뉴들도 여기에 추가
+            return false;
+        });*/
+
+        //애니메이션 대신 즉시 위치 수정
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int position = getSelectedPosition(item.getItemId());
+            if (position >= 0 && iconPositions != null) {
+                // 애니메이션 없이 즉시 위치 변경
+                gradientCircle.setX(iconPositions[position]);
+            }
+
+            int itemId = item.getItemId();
+            if (itemId == R.id.Feed) {
+                if (!(this instanceof FeedActivity)) {
+                    startActivity(new Intent(this, FeedActivity.class));
+                    overridePendingTransition(0, 0);
+                }
+                return true;
+            } else if (itemId == R.id.Calendar) {
+                if (!(this instanceof CalendarActivity)) {
+                    startActivity(new Intent(this, CalendarActivity.class));
+                    overridePendingTransition(0, 0);
+                }
+                return true;
+            } else if (itemId == R.id.Profile) {
+                if (!(this instanceof ProfileActivity)) {
+                    startActivity(new Intent(this, ProfileActivity.class));
+                    overridePendingTransition(0, 0);
+                }
+                return true;
+            }
             return false;
         });
 
@@ -131,6 +168,35 @@ public abstract class BaseActivity extends AppCompatActivity {
             }
             window.getDecorView().setSystemUiVisibility(flags);
         }
+    }
+
+    //뒤로 가기 시 하단 메뉴 위치 다시 계산
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (bottomNavigationView != null && gradientCircle != null) {
+            if (iconPositions == null || iconPositions.length == 0) {
+                int count = bottomNavigationView.getMenu().size();
+                iconPositions = new int[count];
+                for (int i = 0; i < count; i++) {
+                    View itemView = bottomNavigationView.findViewById(bottomNavigationView.getMenu().getItem(i).getItemId());
+                    iconPositions[i] = (int) itemView.getX() + (itemView.getWidth() / 2) - (gradientCircle.getWidth() / 2);
+                }
+            }
+
+            int pos = getSelectedPosition(getCurrentNavItemId());
+            if (pos >= 0 && pos < iconPositions.length) {
+                gradientCircle.setX(iconPositions[pos]);
+                bottomNavigationView.setSelectedItemId(getCurrentNavItemId());
+            }
+        }
+    }
+
+    //뒤로가기 시 화면 전환 모션 삭제
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(0, 0);
     }
 
     protected abstract int getCurrentNavItemId();

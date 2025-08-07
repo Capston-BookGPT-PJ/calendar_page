@@ -50,7 +50,6 @@ public class DetailGoalFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_detail_goal, container, false);
 
         TextView cheerMessage = view.findViewById(R.id.cheer_message);
-        View progressFill = view.findViewById(R.id.goal1_progressbar_fill);
 
         // 예: 목표 달성률을 서버에서 받아왔다고 가정
         int progressRate = 52; // 백에서 받아온 값
@@ -78,7 +77,10 @@ public class DetailGoalFragment extends Fragment {
         int goal2progress = 33;
         ProgressBarUtil.setProgressBar(requireContext(), goal2ProgressFill, goal2progress, 300);
 
-
+        // goal3에 해당하는 progressbar fill View
+        View goal3ProgressFill = view.findViewById(R.id.goal3_progressbar_fill);
+        int goal3progress = 22;
+        ProgressBarUtil.setProgressBar(requireContext(), goal3ProgressFill, goal3progress, 300);
 
 
         //책 이미지 처리 리턴
@@ -91,8 +93,22 @@ public class DetailGoalFragment extends Fragment {
         LinearLayout bookContainer = view.findViewById(R.id.book_list_container);
         BookListHelper.setupBooks(getContext(), bookContainer, books, false);
 
-        //막대 그래프 처리
+        //그래프 처리
         setupWeeklyGraph(view);
+
+        // btn_set_goal 클릭 시 SetGoalFragment로 전환
+        View SetlGoalButton = view.findViewById(R.id.btn_set_goal);
+
+        if (SetlGoalButton != null) {
+            SetlGoalButton.setOnClickListener(v -> {
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, new SetGoalFragment())
+                        .addToBackStack(null)
+                        .commit();
+            });
+        }
+
         return view;
     }
 
@@ -108,7 +124,7 @@ public class DetailGoalFragment extends Fragment {
         List<String> xLabels = new ArrayList<>();
 
         Calendar calendar = Calendar.getInstance(); // 오늘 기준
-        SimpleDateFormat sdf = new SimpleDateFormat("E", Locale.KOREA); // 요일 (일~토)
+        SimpleDateFormat sdf = new SimpleDateFormat("d", Locale.KOREA); //날짜
 
         for (int i = 6; i >= 0; i--) {
             calendar.add(Calendar.DAY_OF_YEAR, -i);
@@ -122,11 +138,14 @@ public class DetailGoalFragment extends Fragment {
             calendar.add(Calendar.DAY_OF_YEAR, i); // 원래 날짜로 되돌림
         }
 
+
         // 2. 막대그래프
         BarDataSet barDataSet = new BarDataSet(barEntries, "Hours");
         barDataSet.setDrawValues(false);
         barDataSet.setColors(getBarColors(readingHours));
+        barDataSet.setValueTextSize(5f);
         BarData barData = new BarData(barDataSet);
+        barData.setBarWidth(0.1f); // 막대 폭 설정
 
 
         // 3. 꺾은선 그래프
@@ -139,10 +158,12 @@ public class DetailGoalFragment extends Fragment {
         lineDataSet.setMode(LineDataSet.Mode.LINEAR);
         LineData lineData = new LineData(lineDataSet);
 
+
         // 4. Combine
         CombinedData combinedData = new CombinedData();
         combinedData.setData(barData);
         combinedData.setData(lineData);
+
 
         // 5. X축 설정
         XAxis xAxis = combinedChart.getXAxis();
@@ -150,6 +171,9 @@ public class DetailGoalFragment extends Fragment {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
         xAxis.setTextColor(Color.BLACK);
+        xAxis.setAxisMinimum(-0.5f);
+        xAxis.setAxisMaximum(barEntries.size() - 0.5f);
+        xAxis.setAxisLineColor(Color.TRANSPARENT);
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getAxisLabel(float value, AxisBase axis) {
@@ -162,18 +186,16 @@ public class DetailGoalFragment extends Fragment {
             }
         });
 
-        // 오늘에 해당하는 요일 하이라이트
+        // 오늘에 하이라이트
         int todayIndex = 6;
         xAxis.setTextColor(Color.BLACK);
-        xAxis.setTextSize(11f);
+        xAxis.setTextSize(12f);
         xAxis.setLabelRotationAngle(0f);
+
 
         // 6. Y축 설정
         YAxis leftAxis = combinedChart.getAxisLeft();
-        leftAxis.setAxisMinimum(0f);
-        leftAxis.setGranularity(1f);
-        leftAxis.setDrawGridLines(false);
-        leftAxis.setTextColor(Color.GRAY);
+        leftAxis.setEnabled(false);
 
         combinedChart.getAxisRight().setEnabled(false);
         combinedChart.getDescription().setEnabled(false);
@@ -194,19 +216,17 @@ public class DetailGoalFragment extends Fragment {
         List<Integer> colors = new ArrayList<>();
         for (float h : hours) {
             if (h == 0f) {
-                colors.add(Color.parseColor("#DC8686")); // 회색
+                colors.add(Color.parseColor("#DC8686"));
             } else if (h <= 1f) {
-                colors.add(Color.parseColor("#86DCA4")); // 연초록
+                colors.add(Color.parseColor("#86DCA4"));
             } else if (h <= 2f) {
-                colors.add(Color.parseColor("#86B4DC")); // 초록
+                colors.add(Color.parseColor("#86B4DC"));
             } else {
                 colors.add(Color.parseColor("#9A86DC"));
             }
         }
         return colors;
     }
-
-
 
 
 }

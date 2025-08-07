@@ -3,6 +3,7 @@ package com.example.meltingbooks;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,12 +12,15 @@ import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import java.util.Calendar;
+import java.util.Locale;
 
 public class CalendarContentFragment extends Fragment {
     public CalendarContentFragment() { }
@@ -25,6 +29,9 @@ public class CalendarContentFragment extends Fragment {
     private GridLayout calendarGrid;
     private TextView textMonth;
     private Calendar currentCalendar;
+
+    private TextView selectedDayView = null;
+    private Calendar selectedDate = Calendar.getInstance();  // 기본: 오늘
 
 
     @Override
@@ -58,6 +65,18 @@ public class CalendarContentFragment extends Fragment {
                 requireActivity().getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.fragment_container, new DetailGoalFragment())
+                        .addToBackStack(null)
+                        .commit();
+            });
+        }
+
+        // btn_monthly_report 클릭 시 MonthlyReportFragment 로 전환
+        View MonthlyReportButton = view.findViewById(R.id.btn_monthly_report);
+        if (MonthlyReportButton != null) {
+            MonthlyReportButton.setOnClickListener(v -> {
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, new MonthlyReportFragment())
                         .addToBackStack(null)
                         .commit();
             });
@@ -120,21 +139,62 @@ public class CalendarContentFragment extends Fragment {
             calendarGrid.addView(emptyView);
         }
 
-        // 날짜 채우기
+        //날짜 채우기
         for (int day = 1; day <= maxDay; day++) {
             TextView dayView = new TextView(getContext());
             dayView.setText(String.valueOf(day));
             dayView.setGravity(Gravity.CENTER);
             dayView.setTextSize(16);
             dayView.setPadding(8, 8, 8, 8);
-            dayView.setTextColor(Color.BLACK);
 
-            // GridLayout에 맞는 LayoutParams 설정
+            // 크기 설정 (정사각형)
+            int sizeInDp = 35;
+            int sizeInPx = (int) TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, sizeInDp, getResources().getDisplayMetrics()
+            );
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = 0;
-            params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-            params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f); // 비율로 균등 분배
+            params.width = sizeInPx;
+            params.height = sizeInPx;
+            params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
             dayView.setLayoutParams(params);
+
+            Calendar thisDate = Calendar.getInstance();
+            thisDate.set(year, month, day);
+
+            // 초기 스타일 적용
+            if (thisDate.get(Calendar.YEAR) == selectedDate.get(Calendar.YEAR) &&
+                    thisDate.get(Calendar.MONTH) == selectedDate.get(Calendar.MONTH) &&
+                    thisDate.get(Calendar.DAY_OF_MONTH) == selectedDate.get(Calendar.DAY_OF_MONTH)) {
+                dayView.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.bg_selected_date));
+                dayView.setTextColor(Color.WHITE);
+                selectedDayView = dayView;
+            } else {
+                dayView.setTextColor(Color.BLACK);
+            }
+
+            // 클릭 이벤트 처리
+            dayView.setOnClickListener(v -> {
+                // 기존 선택 해제
+                if (selectedDayView != null) {
+                    selectedDayView.setBackground(null);
+                    selectedDayView.setTextColor(Color.BLACK);
+                }
+
+                // 새로 선택
+                selectedDayView = (TextView) v;
+                selectedDayView.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.bg_selected_date));
+                selectedDayView.setTextColor(Color.WHITE);
+
+                // 날짜 저장
+                selectedDate.set(year, month, Integer.parseInt(dayView.getText().toString()));
+
+                // 날짜별 기록 표시
+                SimpleDateFormat format = new SimpleDateFormat("M/d (E)", Locale.KOREA);
+                TextView goalByDate = getActivity().findViewById(R.id.goal_by_date);
+                if (goalByDate != null) {
+                    goalByDate.setText(format.format(selectedDate.getTime()));
+                }
+            });
 
             calendarGrid.addView(dayView);
         }
